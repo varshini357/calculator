@@ -1,0 +1,48 @@
+services:
+  web:
+    build: .
+    command: gunicorn calculator_project.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: calculator_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    restart: always
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:1.25
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+    restart: always
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
